@@ -16,6 +16,7 @@
         public const string PHONES_N_TABLETS = "Phones & Tablets";
         public const string LAPTOP_N_COMPUTER = "Laptop & Computer";
         public const string LAPTOPS = "Laptops";
+        public const string Accessories = "Computer & Laptop Accessories";
 
         public static string[] Categories = new string[] { 
             SMART_PHONES
@@ -24,6 +25,15 @@
             , TABLETS
             , PHONES_N_TABLETS
             , LAPTOP_N_COMPUTER
+            , Accessories
+        };
+    }
+
+    public static class ProductSlugs
+    {
+        public static string[] Slugs = new string[]
+        {
+            "galaxy-m20-3gb-rom-32-gb-rom-13-0-mp-5-0-mp-camera-with-6-3-display-smartphone"
         };
     }
 }

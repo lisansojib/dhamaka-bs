@@ -15,6 +15,7 @@ namespace DhamakaBS
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<Worker>();
+                    services.AddHostedService<ProductWorker>();
                 });
     }
 }

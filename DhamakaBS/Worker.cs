@@ -28,8 +28,6 @@ namespace DhamakaBS
             {
                 var products = await GetProducts();
 
-                if (products.Count > 10) Alert();
-
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 _logger.LogInformation($"Total products: {products.Count}");
                 await Task.Delay(60000, stoppingToken);
@@ -38,21 +36,8 @@ namespace DhamakaBS
 
         private static async Task<List<Product>> GetProducts()
         {
-            var client = new RestClient("https://service.dhamakashopping.com/graphql")
-            {
-                Timeout = -1
-            };
-
-            var request = new RestRequest(Method.POST);
-            request.AddHeader("Content-Type", "application/json");
-            request.AddParameter("application/json", "{\"query\":\"query getCampaignById($_id: ObjectId, $pagination: PaginationInput, $category: ObjectId) {\\r\\n  campaignById(_id: $_id) {\\r\\n    _id\\r\\n    name\\r\\n    banner\\r\\n    startAt\\r\\n    endAt\\r\\n    categories {\\r\\n      _id\\r\\n      name\\r\\n      __typename\\r\\n    }\\r\\n    products(pagination: $pagination, filter: {category: $category, status: ACTIVE}) {\\r\\n      _id\\r\\n      name\\r\\n      oldPrice\\r\\n      price\\r\\n      campaignPriceTemp\\r\\n      slug\\r\\n      campaign {\\r\\n        _id\\r\\n        __typename\\r\\n      }\\r\\n      stock\\r\\n      status\\r\\n      images {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      thumnails {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      shop {\\r\\n        status\\r\\n        __typename\\r\\n      }\\r\\n      category {\\r\\n        _id\\r\\n        name\\r\\n        slug\\r\\n        parentCategories\\r\\n        parent {\\r\\n          _id\\r\\n          parent {\\r\\n            _id\\r\\n            __typename\\r\\n          }\\r\\n          __typename\\r\\n        }\\r\\n        __typename\\r\\n      }\\r\\n      __typename\\r\\n    }\\r\\n    status\\r\\n    __typename\\r\\n  }\\r\\n}\",\"variables\":{\"pagination\":{\"page\":1,\"limit\":1000},\"_id\":\"5fe577b19ba2980b60f68299\"}}",
-                       ParameterType.RequestBody);
-            IRestResponse response = await client.ExecuteAsync(request);
-            dynamic data = JsonConvert.DeserializeObject(response.Content);
-            List<Product> products = JsonConvert.DeserializeObject<List<Product>>(JsonConvert.SerializeObject(data.data.campaignById.products));
-            products = products.FindAll(x 
-                => x.Stock > 0 
-                && CategoryNames.Categories.Contains(x.Category.Name));
+            List<Product> products = await GetCMasCampaignAsync();
+            products.AddRange(await GetMobileCampaignAsync());
 
             var fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.PRODUCT_FILE_NAME);
 
@@ -91,8 +76,47 @@ namespace DhamakaBS
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
-            }
-            
+            }            
+        }
+
+        private static async Task<List<Product>> GetMobileCampaignAsync()
+        {
+            var client = new RestClient("https://service.dhamakashopping.com/graphql")
+            {
+                Timeout = -1
+            };
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Content-Type", "application/json");
+            request.AddParameter("application/json", "{\"query\":\"query getCampaignById($_id: ObjectId, $pagination: PaginationInput, $category: ObjectId) {\\r\\n  campaignById(_id: $_id) {\\r\\n    _id\\r\\n    name\\r\\n    banner\\r\\n    startAt\\r\\n    endAt\\r\\n    categories {\\r\\n      _id\\r\\n      name\\r\\n      __typename\\r\\n    }\\r\\n    products(pagination: $pagination, filter: {category: $category, status: ACTIVE}) {\\r\\n      _id\\r\\n      name\\r\\n      oldPrice\\r\\n      price\\r\\n      campaignPriceTemp\\r\\n      slug\\r\\n      campaign {\\r\\n        _id\\r\\n        __typename\\r\\n      }\\r\\n      stock\\r\\n      status\\r\\n      images {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      thumnails {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      shop {\\r\\n        status\\r\\n        __typename\\r\\n      }\\r\\n      category {\\r\\n        _id\\r\\n        name\\r\\n        slug\\r\\n        parentCategories\\r\\n        parent {\\r\\n          _id\\r\\n          parent {\\r\\n            _id\\r\\n            __typename\\r\\n          }\\r\\n          __typename\\r\\n        }\\r\\n        __typename\\r\\n      }\\r\\n      __typename\\r\\n    }\\r\\n    status\\r\\n    __typename\\r\\n  }\\r\\n}\",\"variables\":{\"pagination\":{\"page\":1,\"limit\":1000},\"_id\":\"5fc796b7e061957f8552b961\"}}",
+                       ParameterType.RequestBody);
+            IRestResponse response = await client.ExecuteAsync(request);
+            dynamic data = JsonConvert.DeserializeObject(response.Content);
+            List<Product> products = JsonConvert.DeserializeObject<List<Product>>(JsonConvert.SerializeObject(data.data.campaignById.products));
+            products = products.FindAll(x
+                => x.Stock > 0
+                && CategoryNames.Categories.Contains(x.Category.Name));
+
+            return products;
+        }
+
+        private static async Task<List<Product>> GetCMasCampaignAsync()
+        {
+            var client = new RestClient("https://service.dhamakashopping.com/graphql")
+            {
+                Timeout = -1
+            };
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("Content-Type", "application/json");
+            request.AddParameter("application/json", "{\"query\":\"query getCampaignById($_id: ObjectId, $pagination: PaginationInput, $category: ObjectId) {\\r\\n  campaignById(_id: $_id) {\\r\\n    _id\\r\\n    name\\r\\n    banner\\r\\n    startAt\\r\\n    endAt\\r\\n    categories {\\r\\n      _id\\r\\n      name\\r\\n      __typename\\r\\n    }\\r\\n    products(pagination: $pagination, filter: {category: $category, status: ACTIVE}) {\\r\\n      _id\\r\\n      name\\r\\n      oldPrice\\r\\n      price\\r\\n      campaignPriceTemp\\r\\n      slug\\r\\n      campaign {\\r\\n        _id\\r\\n        __typename\\r\\n      }\\r\\n      stock\\r\\n      status\\r\\n      images {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      thumnails {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      shop {\\r\\n        status\\r\\n        __typename\\r\\n      }\\r\\n      category {\\r\\n        _id\\r\\n        name\\r\\n        slug\\r\\n        parentCategories\\r\\n        parent {\\r\\n          _id\\r\\n          parent {\\r\\n            _id\\r\\n            __typename\\r\\n          }\\r\\n          __typename\\r\\n        }\\r\\n        __typename\\r\\n      }\\r\\n      __typename\\r\\n    }\\r\\n    status\\r\\n    __typename\\r\\n  }\\r\\n}\",\"variables\":{\"pagination\":{\"page\":1,\"limit\":1000},\"_id\":\"5fe577b19ba2980b60f68299\"}}",
+                       ParameterType.RequestBody);
+            IRestResponse response = await client.ExecuteAsync(request);
+            dynamic data = JsonConvert.DeserializeObject(response.Content);
+            List<Product> products = JsonConvert.DeserializeObject<List<Product>>(JsonConvert.SerializeObject(data.data.campaignById.products));
+            products = products.FindAll(x
+                => x.Stock > 0
+                && CategoryNames.Categories.Contains(x.Category.Name));
+
+            return products;
         }
     }
 }
