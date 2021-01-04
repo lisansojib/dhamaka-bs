@@ -31,9 +31,16 @@
 
     public static class ProductSlugs
     {
-        public static string[] Slugs = new string[]
+        public static string[] DUrls = new string[]
         {
-            "galaxy-m20-3gb-rom-32-gb-rom-13-0-mp-5-0-mp-camera-with-6-3-display-smartphone"
+            "https://www.dhamakashopping.com/products/galaxy-m20-3gb-rom-32-gb-rom-13-0-mp-5-0-mp-camera-with-6-3-display-smartphone",
+            "https://www.dhamakashopping.com/products/realme-c17-6gb-ram-128gb-rom-f7yCR2u8QK",
+            "https://www.dhamakashopping.com/products/realme-7i-8gb-ram-128gb-rom-sOrfVYokd"
+        };
+
+        public static string[] SUrls = new string[]
+        {
+            "https://www.sirajganjshop.com/product/Realme-Narzo-20-3ajoc"
         };
     }
 }

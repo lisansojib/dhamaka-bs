@@ -11,13 +11,13 @@ namespace DhamakaBS
         public string Name { get; set; }
 
         [JsonProperty("oldPrice")]
-        public long OldPrice { get; set; }
+        public decimal OldPrice { get; set; }
 
         [JsonProperty("price")]
-        public long Price { get; set; }
+        public decimal Price { get; set; }
 
         [JsonProperty("campaignPriceTemp")]
-        public long CampaignPriceTemp { get; set; }
+        public decimal CampaignPriceTemp { get; set; }
 
         [JsonProperty("slug")]
         public string Slug { get; set; }
@@ -41,6 +41,8 @@ namespace DhamakaBS
         public Category Category { get; set; }
 
         public string Url { get; set; }
+
+        public decimal Disc { get; set; }
     }
 
     public class Campaign

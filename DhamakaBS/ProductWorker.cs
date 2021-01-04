@@ -44,29 +44,52 @@ namespace DhamakaBS
             }
         }
 
-        private static async Task<List<string>> GetProductStockAsync()
+        private async Task<List<string>> GetProductStockAsync()
         {
             List<string> newStockList = new List<string>();
 
             var httpClient = new HttpClient();
 
-            foreach (var item in ProductSlugs.Slugs)
+            foreach (var productUrl in ProductSlugs.DUrls)
             {
-                var productUrl = $"{Constants.PRODUCT_BASE_URL}{item}";
                 using var response = await httpClient.GetAsync(productUrl);
                 using var content = response.Content;
                 var result = await content.ReadAsStringAsync();
                 var document = new HtmlDocument();
                 document.LoadHtml(result);
-                var productInfo = document.GetElementbyId("__NEXT_DATA__").InnerText;
 
-                var startIndex = productInfo.IndexOf(":", productInfo.IndexOf("stock")) + 1;
-                var length = productInfo.IndexOf(",", startIndex) - startIndex;
+                int stock = 0;
+                try
+                {
+                    var productInfo = document.GetElementbyId("__NEXT_DATA__").InnerText;
 
-                int.TryParse(productInfo.Substring(startIndex, length), out int stock);
+                    var startIndex = productInfo.IndexOf(":", productInfo.IndexOf("stock")) + 1;
+                    var length = productInfo.IndexOf(",", startIndex) - startIndex;
 
-                if (stock > 0) newStockList.Add(productUrl);
+                    int.TryParse(productInfo.Substring(startIndex, length), out stock);
+
+                    if (stock > 0) newStockList.Add(productUrl);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.Message);
+
+                    result.Contains("In Stock", StringComparison.OrdinalIgnoreCase);
+                }
             }
+
+            //foreach (var productUrl in ProductSlugs.SUrls)
+            //{
+            //    using var response = await httpClient.GetAsync(productUrl);
+            //    using var content = response.Content;
+            //    var result = await content.ReadAsStringAsync();
+            //    var document = new HtmlDocument();
+            //    document.LoadHtml(result);
+
+            //    var productInfo = document.DocumentNode.Descendants().Where(x => x.HasClass("product-description-wrapper")).FirstOrDefault().InnerText;
+
+            //    if(productInfo.Contains("In Stock", StringComparison.OrdinalIgnoreCase)) newStockList.Add(productUrl);
+            //}
 
             return newStockList;
         }
