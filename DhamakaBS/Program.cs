@@ -14,8 +14,9 @@ namespace DhamakaBS
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddHostedService<Worker>();
-                    services.AddHostedService<ProductWorker>();
+                    //services.AddHostedService<Worker>();
+                    services.AddHostedService<ShopWorker>();
+                    //services.AddHostedService<ProductWorker>();
                 });
     }
 }

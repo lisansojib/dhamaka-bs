@@ -41,7 +41,7 @@ namespace DhamakaBS.Core
                 client.Connect("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.Auto);
 
                 // Note: only needed if the SMTP server requires authentication
-                client.Authenticate("sojib352@gmail.com", "@^Tasmin*1");
+                client.Authenticate("sojib352@gmail.com", "&6509gj!dk");
 
                 await client.SendAsync(message);
                 client.Disconnect(true);

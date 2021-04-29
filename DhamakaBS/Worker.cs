@@ -28,69 +28,62 @@ namespace DhamakaBS
             {
                 var products = await GetProducts();
 
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                _logger.LogInformation($"Total products: {products.Count}");
-                await Task.Delay(60000, stoppingToken);
+                _logger.LogInformation($"Total products: {products.Count} {DateTimeOffset.Now}");
+                await Task.Delay(5000, stoppingToken);
             }
         }
 
-        private static async Task<List<Product>> GetProducts()
+        private async Task<List<Product>> GetProducts()
         {
             List<Product> products = await GetMobileCampaignAsync();
 
-            products = products.FindAll(x => x.OldPrice > 0 && x.OldPrice > x.Price 
-                && !x.Slug.Contains("mouse") 
-                && !x.Slug.Contains("ssd") 
-                && !x.Slug.Contains("keyboard") 
-                && !x.Slug.Contains("speaker") 
-                && !x.Slug.Contains("webcam")
-                && !x.Slug.Contains("camera")
-                && !x.Slug.Contains("protector")
-                && !x.Slug.Contains("router")
-                && !x.Slug.Contains("trimmer")
-                && !x.Slug.Contains("heater")
-                && !x.Slug.Contains("repeater")
-                && !x.Slug.Contains("ny-ubFlRjVNT")
-                && !x.Slug.Contains("ny-upNr_CyLj")
-                && !x.Slug.Contains("ny-Ex1qAhtBDx")
-                && !x.Slug.Contains("ipad")
-                && !x.Slug.Contains("linnex")
-                && !x.Slug.Contains("plextone")
-                && !x.Slug.Contains("and")
-                && !x.Slug.Contains("wristband")
-                && !x.Slug.Contains("kgtel")
-                && !x.Slug.Contains("dell-vostro-14-3401-core-i3")
-                );
+            products = products.FindAll(x => x.Category.Name == CategoryNames.SMART_PHONES
+                && !x.Slug.Contains("bird") 
+                && !x.Slug.Contains("symphony") 
+                && !x.Slug.Contains("titanic") 
+                && !x.Slug.Contains("walton") 
+                && !x.Slug.Contains("watch")
+                && !x.Slug.Contains("maximus")
+                && !x.Slug.Contains("huawei")
+                && !x.Slug.Contains("infinix")
+                && !x.Slug.Contains("apple")
+                && !x.Slug.Contains("tinmo")
+                && !x.Slug.Contains("yoga-tablet")
+                && !x.Slug.Contains("mycell"));
+
             products.ForEach(x => x.Disc = (x.OldPrice - x.Price) / x.OldPrice * 100);
-            products = products.FindAll(x => x.Disc >= 20);
+            products = products.FindAll(x => x.Disc >= 15);
 
             var fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Constants.PRODUCT_FILE_NAME);
 
+            List<Product> newProductList = new();
             var text = await File.ReadAllTextAsync(fullPath);
-            if (!string.IsNullOrEmpty(text))
+            List<Product> oldProductList = JsonConvert.DeserializeObject<List<Product>>(text) ?? new();
+            foreach (var item in products)
             {
-                var oldProducts = JsonConvert.DeserializeObject<List<Product>>(text);
-                foreach (var item in oldProducts)
+                if (!oldProductList.Any(x => x.Id == item.Id && x.Slug == item.Slug))
                 {
-                    var newProduct = products.Find(x => x.Id == item.Id && x.Disc <= item.Disc);
-                    if (newProduct != null) products.Remove(newProduct);
-                }
-
-                if (products.Any())
-                {
-                    var mailBody = "";
-                    foreach (var item in products)
-                    {
-                        mailBody += $"{Constants.PRODUCT_BASE_URL}{item.Slug} <b>Discount {(int)item.Disc}%<b><br><br>";
-                    }
-
-                    await EmailService.SendEmailAsync(Constants.MAIL_ADDR, "New stock arriived!", mailBody);
+                    oldProductList.Add(item);
+                    newProductList.Add(item);
                 }
             }
 
-            await File.WriteAllTextAsync(fullPath, JsonConvert.SerializeObject(products));
+            if (newProductList.Any())
+            {
+                Alert();
 
-            return products;
+                var mailBody = "";
+                foreach (var item in products)
+                {
+                    mailBody += $"{Constants.PRODUCT_BASE_URL}{item.Slug} <b>Discount {(int)item.Disc}%<b> {item.Stock}<br><br>";
+                }
+
+                await EmailService.SendEmailAsync(Constants.MAIL_ADDR, "New stock arriived!", mailBody);
+            }
+
+            await File.WriteAllTextAsync(fullPath, JsonConvert.SerializeObject(oldProductList));
+
+            return newProductList;
         }
 
         private void Alert()
@@ -116,17 +109,14 @@ namespace DhamakaBS
             };
             var request = new RestRequest(Method.POST);
             request.AddHeader("Content-Type", "application/json");
-            request.AddParameter("application/json", "{\"query\":\"query getCampaignById($_id: ObjectId, $pagination: PaginationInput, $category: ObjectId) {\\r\\n  campaignById(_id: $_id) {\\r\\n    _id\\r\\n    name\\r\\n    banner\\r\\n    startAt\\r\\n    endAt\\r\\n    categories {\\r\\n      _id\\r\\n      name\\r\\n      __typename\\r\\n    }\\r\\n    products(pagination: $pagination, filter: {category: $category, status: ACTIVE}) {\\r\\n      _id\\r\\n      name\\r\\n      oldPrice\\r\\n      price\\r\\n      campaignPriceTemp\\r\\n      slug\\r\\n      campaign {\\r\\n        _id\\r\\n        __typename\\r\\n      }\\r\\n      stock\\r\\n      status\\r\\n      images {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      thumnails {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      shop {\\r\\n        status\\r\\n        __typename\\r\\n      }\\r\\n      category {\\r\\n        _id\\r\\n        name\\r\\n        slug\\r\\n        parentCategories\\r\\n        parent {\\r\\n          _id\\r\\n          parent {\\r\\n            _id\\r\\n            __typename\\r\\n          }\\r\\n          __typename\\r\\n        }\\r\\n        __typename\\r\\n      }\\r\\n      __typename\\r\\n    }\\r\\n    status\\r\\n    __typename\\r\\n  }\\r\\n}\",\"variables\":{\"pagination\":{\"page\":1,\"limit\":1000},\"_id\":\"5feda8afcd6c250b5dad75d4\"}}",
+            request.AddParameter("application/json", "{\"query\":\"query getCampaignById($_id: ObjectId, $pagination: PaginationInput, $category: ObjectId) {\\r\\n  campaignById(_id: $_id) {\\r\\n    _id\\r\\n    name\\r\\n    banner\\r\\n    startAt\\r\\n    endAt\\r\\n    categories {\\r\\n      _id\\r\\n      name\\r\\n      __typename\\r\\n    }\\r\\n    products(pagination: $pagination, filter: {category: $category, status: ACTIVE}) {\\r\\n      _id\\r\\n      name\\r\\n      oldPrice\\r\\n      price\\r\\n      campaignPriceTemp\\r\\n      slug\\r\\n      campaign {\\r\\n        _id\\r\\n        __typename\\r\\n      }\\r\\n      stock\\r\\n      status\\r\\n      images {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      thumnails {\\r\\n        image\\r\\n        __typename\\r\\n      }\\r\\n      shop {\\r\\n        status\\r\\n        __typename\\r\\n      }\\r\\n      category {\\r\\n        _id\\r\\n        name\\r\\n        slug\\r\\n        parentCategories\\r\\n        parent {\\r\\n          _id\\r\\n          parent {\\r\\n            _id\\r\\n            __typename\\r\\n          }\\r\\n          __typename\\r\\n        }\\r\\n        __typename\\r\\n      }\\r\\n      __typename\\r\\n    }\\r\\n    status\\r\\n    __typename\\r\\n  }\\r\\n}\",\"variables\":{\"pagination\":{\"page\":1,\"limit\":1000},\"_id\":\"606da2fc0747770007899806\"}}",
                        ParameterType.RequestBody);
             IRestResponse response = await client.ExecuteAsync(request);
             dynamic data = JsonConvert.DeserializeObject(response.Content);
             List<Product> products = JsonConvert.DeserializeObject<List<Product>>(JsonConvert.SerializeObject(data.data.campaignById.products));
-            products = products.FindAll(x
-                => x.Stock > 0
-                && CategoryNames.Categories.Contains(x.Category.Name));
+            products = products.FindAll(x => x.Stock > 0);
 
             return products;
         }
-
     }
 }

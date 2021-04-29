@@ -23,7 +23,7 @@ namespace DhamakaBS
         public string Slug { get; set; }
 
         [JsonProperty("campaign")]
-        public Campaign Campaign { get; set; }
+        public virtual Campaign Campaign { get; set; }
 
         [JsonProperty("stock")]
         public long Stock { get; set; }
@@ -32,13 +32,13 @@ namespace DhamakaBS
         public string Status { get; set; }
 
         [JsonProperty("shop")]
-        public Shop Shop { get; set; }
+        public virtual Shop Shop { get; set; }
 
         [JsonProperty("__typename")]
         public string Typename { get; set; }
 
         [JsonProperty("category")]
-        public Category Category { get; set; }
+        public virtual Category Category { get; set; }
 
         public string Url { get; set; }
 
@@ -67,5 +67,17 @@ namespace DhamakaBS
     {
         [JsonProperty("name")]
         public string Name { get; set; }
+    }
+
+    public class ShopProduct : Product
+    {
+        [JsonIgnore]
+        public override Category Category { get; set; }
+
+        [JsonIgnore]
+        public override Shop Shop { get; set; }
+
+        [JsonIgnore]
+        public override Campaign Campaign { get; set; }
     }
 }
